@@ -7,7 +7,7 @@ import asyncio
 # =========================================================
 # 🔧 CONFIGURATION
 # =========================================================
-TOKEN = "TQzMTA1NTEzMzU4NzgwNDIzNA.GqnIW4.nYdqeCyUvftJny4PNXUnCqjBTFKrllkKkALgq0"
+TOKEN = "MTQzMTA1NTEzMzU4NzgwNDIzNA.GqnIW4.nYdqeCyUvftJny4PNXUnCqjBTFKrllkKkALgq0"
 ROLE_NAME = "Mini Piper"
 SEND_DELAY_SECONDS = 1.0
 
