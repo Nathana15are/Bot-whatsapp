@@ -1,15 +1,21 @@
-# bot_fusion_embed.py
+# bot_fusion_embed_secure.py
+import os
 import discord
 from discord import app_commands
 from discord.ext import commands
 import asyncio
+from dotenv import load_dotenv
 
 # =========================================================
-# 🔧 CONFIGURATION
+# 🔧 CHARGEMENT DU TOKEN (depuis variable d'environnement)
 # =========================================================
-TOKEN = "MTQzMTA1NTEzMzU4NzgwNDIzNA.GqnIW4.nYdqeCyUvftJny4PNXUnCqjBTFKrllkKkALgq0"
+load_dotenv()  # charge les variables du fichier .env si présent
+TOKEN = os.getenv("TOKEN")
 ROLE_NAME = "Mini Piper"
 SEND_DELAY_SECONDS = 1.0
+
+if not TOKEN:
+    raise ValueError("⚠️ Erreur : tu dois définir ton token dans les variables d'environnement.")
 
 # =========================================================
 # 🚀 CONFIGURATION DU BOT
@@ -30,7 +36,7 @@ async def on_ready():
     print(f"🤖 Connecté en tant que {bot.user} (ID: {bot.user.id})")
 
 # =========================================================
-# 💬 COMMANDE /dm-optin (slash command)
+# 💬 COMMANDE /dm-optin
 # =========================================================
 @bot.tree.command(name="dm-optin", description="Envoie un DM à tous les membres avec le rôle défini (Admins seulement)")
 @app_commands.describe(message="Le message à envoyer aux membres")
@@ -64,7 +70,6 @@ async def dm_optin(interaction: discord.Interaction, message: str):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
     sent, failed, skipped = 0, 0, 0
-
     async for member in guild.fetch_members(limit=None):
         if member.bot or role not in member.roles:
             skipped += 1
@@ -75,9 +80,7 @@ async def dm_optin(interaction: discord.Interaction, message: str):
                                      color=discord.Color.green())
             await member.send(embed=dm_embed)
             sent += 1
-        except discord.Forbidden:
-            failed += 1
-        except discord.HTTPException:
+        except (discord.Forbidden, discord.HTTPException):
             failed += 1
         await asyncio.sleep(SEND_DELAY_SECONDS)
 
@@ -87,7 +90,7 @@ async def dm_optin(interaction: discord.Interaction, message: str):
     await interaction.followup.send(embed=summary_embed, ephemeral=True)
 
 # =========================================================
-# 🧪 COMMANDE /test (slash command)
+# 🧪 COMMANDE /test
 # =========================================================
 @bot.tree.command(name="test", description="Vérifie si le bot fonctionne")
 async def test(interaction: discord.Interaction):
@@ -97,7 +100,7 @@ async def test(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # =========================================================
-# ➕ COMMANDE !add-role (texte classique)
+# ➕ COMMANDE !add-role
 # =========================================================
 @bot.command(name="add-role")
 async def add_role(ctx, role_id: int, member: discord.Member):
@@ -129,7 +132,4 @@ async def add_role(ctx, role_id: int, member: discord.Member):
 # ▶️ LANCEMENT DU BOT
 # =========================================================
 if __name__ == "__main__":
-    if not TOKEN or TOKEN == "TON_TOKEN_ICI":
-        print("⚠️ Erreur : tu dois mettre ton token dans la variable TOKEN.")
-    else:
-        bot.run(TOKEN)
+    bot.run(TOKEN)
