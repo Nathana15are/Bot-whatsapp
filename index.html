@@ -121,12 +121,14 @@ function reponseLocale(q){
   return null;
 }
 
-// --- Recherche DuckDuckGo via proxy ---
+// --- Recherche DuckDuckGo via proxy stable (api.allorigins.win) ---
 async function rechercheWeb(question){
-  const url="https://cors.isomorphic-git.org/https://duckduckgo.com/html/?q="+encodeURIComponent(question);
+  const url="https://duckduckgo.com/html/?q="+encodeURIComponent(question);
+  const proxy="https://api.allorigins.win/get?url=";
   try{
-    const r=await fetch(url);
-    const text=await r.text();
+    const r=await fetch(proxy+encodeURIComponent(url));
+    const data=await r.json();
+    const text=data.contents;
     const titres=[...text.matchAll(/<a[^>]*class="result__a"[^>]*>(.*?)<\/a>/g)].map(m=>m[1].replace(/<[^>]+>/g,''));
     return titres.slice(0,3).length?titres.slice(0,3):["Aucun résultat trouvé."];
   }catch(e){return ["Erreur recherche : "+e.message];}
@@ -137,7 +139,6 @@ const chat=document.getElementById("chat");
 const form=document.getElementById("form");
 const input=document.getElementById("input");
 
-  
 function addMessage(text,sender,typingEffect=false){
   const div=document.createElement("div");
   div.className="msg "+sender;
