@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IA Locale Mobile Ultime</title>
+<style>
+:root {
+  --bg: #0b1220;
+  --chat-bg: #111a2d;
+  --user-msg: #2b6cb0;
+  --bot-msg: #1f2937;
+  --text: #e6eef6;
+  --accent: #357fd4;
+}
+body[data-theme="light"] {
+  --bg: #f6f7fb;
+  --chat-bg: #ffffff;
+  --user-msg: #0078ff;
+  --bot-msg: #e9ebf0;
+  --text: #0b1220;
+  --accent: #005cc8;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; display:flex; flex-direction:column; height:100vh;
+  font-family:"Inter",Arial,sans-serif;
+  background:var(--bg); color:var(--text);
+  transition: background 0.3s, color 0.3s;
+}
+header{
+  background:var(--chat-bg); display:flex; justify-content:space-between; align-items:center;
+  padding:12px; position:relative; border-bottom:1px solid rgba(255,255,255,0.08);
+}
+header .logo{
+  width:40px; height:40px; border-radius:50%;
+  background:radial-gradient(circle, #2b6cb0 0%, #357fd4 70%, #2b6cb0 100%);
+  box-shadow:0 0 20px #357fd4;
+  animation: halo 3s linear infinite;
+}
+@keyframes halo{
+  0%{transform:rotate(0deg);}
+  100%{transform:rotate(360deg);}
+}
+header span{font-weight:bold; font-size:1.1em;}
+header button{
+  background:var(--user-msg); border:none; color:#fff; padding:6px 12px;
+  font-weight:bold; cursor:pointer; border-radius:8px; transition:0.2s;
+}
+header button:hover{background:var(--accent);}
+#chat{
+  flex:1; padding:15px; display:flex; flex-direction:column; gap:12px;
+  overflow-y:auto; scroll-behavior:smooth;
+}
+.msg{
+  max-width:80%; padding:10px 14px; border-radius:16px; line-height:1.4em;
+  white-space:pre-wrap; word-wrap:break-word; opacity:0; transform:scale(0.9);
+  animation: pop 0.2s forwards;
+}
+@keyframes pop{
+  to{opacity:1; transform:scale(1);}
+}
+.user{align-self:flex-end; background:var(--user-msg); color:#fff; border-bottom-right-radius:4px;}
+.bot{align-self:flex-start; background:var(--bot-msg); border-bottom-left-radius:4px;}
+form{
+  display:flex; border-top:1px solid rgba(255,255,255,0.1); background:var(--chat-bg);
+}
+input{
+  flex:1; padding:12px; border:none; background:transparent; color:var(--text); font-size:1em;
+}
+button.send{
+  background:var(--user-msg); border:none; color:#fff; padding:0 20px; font-weight:bold; cursor:pointer; transition:0.2s; font-size:1em;
+}
+button.send:hover{background:var(--accent);}
+.typing{font-style:italic; opacity:0.7;}
+footer{text-align:center; font-size:0.8em; padding:5px; opacity:0.6;}
+@media(max-width:500px){
+  .msg{max-width:90%; font-size:0.95em;}
+  header{padding:10px;}
+  button.send{padding:0 15px;}
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<header>
+  <div class="logo"></div>
+  <span>IA Locale Ultime</span>
+  <button id="themeBtn">🌞</button>
+</header>
+
+<div id="chat"></div>
+
+<form id="form">
+  <input type="text" id="input" placeholder="Écris ta question..." autocomplete="off">
+  <button class="send">Envoyer</button>
+</form>
+
+<footer>💡 100% IA locale — Sans API — Prête pour GitHub Pages</footer>
+
+<script>
+// --- Thème clair/sombre ---
+const themeBtn = document.getElementById("themeBtn");
+themeBtn.addEventListener("click",()=>{
+  if(document.body.dataset.theme==="dark"){
+    document.body.dataset.theme="light"; themeBtn.textContent="🌙";
+  }else{
+    document.body.dataset.theme="dark"; themeBtn.textContent="🌞";
+  }
+});
+
+// --- Réponses locales ---
+function reponseLocale(q){
+  q=q.toLowerCase();
+  if(q.includes("bonjour")) return "Salut 👋 ! Comment vas-tu ?";
+  if(q.includes("comment tu t'appelles")) return "Je suis ton IA locale 🤖, sans clé API !";
+  if(q.includes("merci")) return "Avec plaisir 😄";
+  if(q.includes("qui es-tu")) return "Je suis une IA JS hébergée directement dans ton navigateur.";
+  if(q.includes("heure")) return "Il est actuellement "+new Date().toLocaleTimeString();
+  if(q.includes("date")) return "Nous sommes le "+new Date().toLocaleDateString();
+  return null;
+}
+
+// --- Recherche DuckDuckGo via proxy ---
+async function rechercheWeb(question){
+  const url="https://cors.isomorphic-git.org/https://duckduckgo.com/html/?q="+encodeURIComponent(question);
+  try{
+    const r=await fetch(url);
+    const text=await r.text();
+    const titres=[...text.matchAll(/<a[^>]*class="result__a"[^>]*>(.*?)<\/a>/g)].map(m=>m[1].replace(/<[^>]+>/g,''));
+    return titres.slice(0,3).length?titres.slice(0,3):["Aucun résultat trouvé."];
+  }catch(e){return ["Erreur recherche : "+e.message];}
+}
+
+// --- Affichage ---
+const chat=document.getElementById("chat");
+const form=document.getElementById("form");
+const input=document.getElementById("input");
+
+  
+function addMessage(text,sender,typingEffect=false){
+  const div=document.createElement("div");
+  div.className="msg "+sender;
+  chat.appendChild(div);
+  if(typingEffect){
+    let i=0;
+    const interval=setInterval(()=>{
+      div.textContent+=text.charAt(i);
+      i++;
+      if(i>=text.length) clearInterval(interval);
+      chat.scrollTop=chat.scrollHeight;
+    },15);
+  }else{
+    div.textContent=text;
+  }
+  chat.scrollTop=chat.scrollHeight;
+}
+
+// --- Gestion de chat ---
+form.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const question=input.value.trim();
+  if(!question) return;
+  addMessage(question,"user");
+  input.value="";
+  const typing=document.createElement("div");
+  typing.className="typing"; typing.textContent="L’IA réfléchit...";
+  chat.appendChild(typing); chat.scrollTop=chat.scrollHeight;
+
+  let rep=reponseLocale(question);
+  if(!rep){
+    const results=await rechercheWeb(question);
+    rep="D’après mes recherches 🌐 :\n- "+results.join("\n- ");
+  }
+  typing.remove();
+  addMessage(rep,"bot",true);
+});
+</script>
+</body>
+</html>
